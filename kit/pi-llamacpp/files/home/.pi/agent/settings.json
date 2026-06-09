@@ -1,0 +1,4 @@
+{
+  "defaultProvider": "llamacpp",
+  "defaultModel": "unsloth/gemma-4-12B-it-qat-GGUF"
+}

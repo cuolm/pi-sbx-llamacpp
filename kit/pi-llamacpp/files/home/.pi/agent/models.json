@@ -1,0 +1,16 @@
+{
+  "providers": {
+    "llamacpp": {
+      "baseUrl": "http://host.docker.internal:8001/v1",
+      "api": "openai-completions",
+      "apiKey": "local-llama",
+      "models": [
+        {
+          "id": "unsloth/gemma-4-12B-it-qat-GGUF",
+          "name": "unsloth/gemma-4-12B-it-qat-GGUF",
+          "input": ["text"]
+        }
+      ]
+    }
+  }
+}

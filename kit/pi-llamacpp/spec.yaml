@@ -1,0 +1,18 @@
+schemaVersion: "1"
+kind: agent
+name: pi
+
+agent:
+  image: "docker/sandbox-templates:shell"
+  entrypoint:
+    run: [pi]
+
+network:
+  allowedDomains:
+    - "registry.npmjs.org"
+    - "host.docker.internal:8001"
+    - "localhost:8001"
+
+commands:
+  install:
+    - command: "npm install -g --ignore-scripts @earendil-works/pi-coding-agent"
