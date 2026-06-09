@@ -26,7 +26,7 @@ Official documentation links:
 │  • enforces allowedDomains rules                            │
 │  • rewrites host.docker.internal to localhost               │
 │    before checking rules                                    │
-│  • forwards allowed requests to host's 127.0.0.1:8001      │
+│  • forwards allowed requests to host's 127.0.0.1:8001       │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │  microVM (Linux, isolated)                          │    │
