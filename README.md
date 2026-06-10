@@ -2,7 +2,7 @@
 
 This guide runs the Pi coding agent inside an isolated Docker Sandbox (sbx)
 microVM, with inference served by a local llama-server on the host machine.
-The microVM provides hypervisor-level isolation: Pi cannot access host files
+The microVM provides hypervisor-level isolation. Pi cannot access host files
 outside the mounted workspace, cannot reach the host keychain or SSH keys, and
 cannot make network requests beyond what is explicitly permitted. The model
 runs on the host GPU at full speed and is not exposed to the network.
@@ -17,41 +17,33 @@ Official documentation links:
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  HOST (macOS or Linux)                                      │
-│                                                             │
-│  llama-server on 127.0.0.1:8001                             │
-│                                                             │
-│  sbx proxy on host, port 3128                               │
-│  • enforces allowedDomains rules                            │
-│  • rewrites host.docker.internal to localhost               │
-│    before checking rules                                    │
-│  • forwards allowed requests to host's 127.0.0.1:8001       │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  microVM (Linux, isolated)                          │    │
-│  │  Pi agent runs here                                 │    │
-│  │  http_proxy = gateway.docker.internal:3128          │    │
-│  │  no_proxy   = localhost,127.0.0.1,::1,...           │    │
-│  │  Calls http://host.docker.internal:8001/v1          │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ HOST (macOS / Linux)                                                 │
+│                                                                      │
+│  llama-server                                                        │
+│  127.0.0.1:8001                                                      │
+│                                                                      │
+│  sbx host-side proxy                                                 │
+│  • allowedDomains enforcement                                        │
+│  • forwards allowed traffic to host services                         │
+│                                                                      │
+│  ┌──────────────────────────────────────────────────────────────┐    │
+│  │ microVM (Linux, isolated)                                    │    │
+│  │                                                              │    │
+│  │  Docker Engine                                               │    │
+│  │  ┌────────────────────────────────────────────────────────┐  │    │
+│  │  │ Pi coding agent container                              │  │    │
+│  │  └────────────────────────────────────────────────────────┘  │    │
+│  └──────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────┘
 ```
-
 **How Pi reaches llama-server across the VM boundary:**
 
-Inside the microVM, `localhost` refers to the VM's own loopback. It is also
-listed in the VM's `no_proxy` variable, so any request to `localhost` skips
-the proxy entirely and stays inside the VM. `host.docker.internal` resolves
-to the host via the sbx gateway and is not in `no_proxy`, so requests to it
-travel through the sbx proxy. The proxy rewrites `host.docker.internal` to
-`localhost` — the host's own `127.0.0.1` — and forwards the request to
-llama-server.
-
-This is why `models.json` uses `host.docker.internal` as the `baseUrl`, and
-why `allowedDomains` must list both `host.docker.internal:8001` (what Pi
-sends) and `localhost:8001` (what the proxy checks against after rewriting).
-
+Inside the microVM, `localhost` refers to the VM itself. 
+`host.docker.internal` resolves to your host machine via the sbx gateway.
+Requests to it travel through the sbx proxy that runs on the host machine.
+Only destinations listed in `allowedDomains` are forwarded, everything else
+is blocked.
 ---
 
 ## Step 1 — Install sbx
@@ -126,7 +118,7 @@ For all installation options see: https://github.com/ggml-org/llama.cpp
 llama-server exposes an OpenAI-compatible HTTP API. On macOS it uses Metal
 for GPU acceleration. On Linux it uses CUDA or ROCm depending on your GPU.
 The microVM has no access to the host GPU, which is why inference runs on the
-host.
+host machine.
 
 ```bash
 llama-server \
@@ -194,8 +186,8 @@ commands:
     - command: "npm install -g --ignore-scripts @earendil-works/pi-coding-agent"
 ```
 
-Both `host.docker.internal:8001` and `localhost:8001` are required in
-`allowedDomains` for the reason explained in the Architecture section.
+Both `host.docker.internal:8001` and `localhost:8001` must be included in 
+`allowedDomains` to authorize and route proxy traffic to the host.
 `registry.npmjs.org` is needed for the npm install during sandbox creation.
 
 ---
@@ -203,7 +195,7 @@ Both `host.docker.internal:8001` and `localhost:8001` are required in
 ## Step 6 — Create models.json
 
 Pi reads `~/.pi/agent/models.json` inside the microVM to discover custom model
-providers. Without this file it only knows about its built-in cloud providers.
+providers. Without this file it only knows about its built-in providers such as Claude.
 
 Place this at `~/.config/docker-sbx/pi-llamacpp/files/home/.pi/agent/models.json`:
 
