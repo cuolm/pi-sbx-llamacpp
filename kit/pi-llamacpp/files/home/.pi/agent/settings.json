@@ -1,4 +1,4 @@
 {
   "defaultProvider": "llamacpp",
-  "defaultModel": "unsloth/gemma-4-12B-it-qat-GGUF"
+  "defaultModel": "unsloth/gemma-4-12B-it-qat-GGUF:Q4_K_XL"
 }
