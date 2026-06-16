@@ -158,6 +158,12 @@ Full directory layout:
                 ├── models.json
                 └── settings.json
 ```
+> **Alternative:** Instead of creating the files manually in the steps below, you can clone the [pi-sbx-llamacpp](https://github.com/cuolm/pi-sbx-llamacpp) repo to your preferred projects location and copy the kit files into place:
+> ```bash
+> git clone https://github.com/cuolm/pi-sbx-llamacpp.git ~/Projects/pi-sbx-llamacpp
+> cp -r ~/Projects/pi-sbx-llamacpp/kit ~/.config/docker-sbx/pi-llamacpp
+> ```
+> Then skip to Step 9.
 
 ---
 
